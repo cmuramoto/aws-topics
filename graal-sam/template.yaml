@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  java17-native-image
+
+  Sample SAM Template for java17-native-image
+
+Globals:
+  Function:
+    Timeout: 20
+
+Resources:
+  EchoFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: EchoFn
+      CodeUri: EchoFunction
+      Handler: io.quarkus.amazon.lambda.runtime.QuarkusStreamHandler::handleRequest
+      Runtime: provided
+      Architectures:
+        - x86_64
+      MemorySize: 256
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          KEY_ONE: VALUE_ONE
+      Events:
+        Echo:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /echo
+            Method: post
+
+Outputs:
+  EchoApi:
+    Description: "API Gateway endpoint URL for Prod stage for Echo function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/echo/"
+  EchoFunction:
+    Description: "EchoFunction Lambda Function ARN"
+    Value: !GetAtt EchoFunction.Arn
+  EchoFunctionIamRole:
+    Description: "Implicit IAM Role created for Echo function"
+    Value: !GetAtt EchoFunctionRole.Arn
