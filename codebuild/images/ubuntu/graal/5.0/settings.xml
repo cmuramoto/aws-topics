@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings
+	xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd"
+	xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<localRepository>/root/.m2/repository/</localRepository>
+	<interactiveMode>false</interactiveMode>
+	<profiles>
+		<profile>
+			<id>maven-aws-us</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<repositories>
+				<repository>
+					<id>maven-aws</id>
+					<url>https://maven-${env.ACCOUNT_ID}.d.codeartifact.${env.REGION}.amazonaws.com/${env.CODEARTIFACT_PATH}</url>
+					<releases>
+						<enabled>true</enabled>
+						<checksumPolicy>warn</checksumPolicy>
+						<updatePolicy>never</updatePolicy>
+					</releases>
+					<snapshots>
+						<enabled>true</enabled>
+						<checksumPolicy>warn</checksumPolicy>
+						<updatePolicy>never</updatePolicy>
+					</snapshots>
+				</repository>
+			</repositories>
+		</profile>
+	</profiles>
+	<servers>
+		<server>
+			<id>maven-aws-us</id>
+			<username>aws</username>
+			<password>${env.CODEARTIFACT_AUTH_TOKEN}</password>
+		</server>
+	</servers>
+	<mirrors>
+		<mirror>
+			<id>maven-aws-us</id>
+			<name>maven-aws-us</name>
+			<url>https://maven-${env.ACCOUNT_ID}.d.codeartifact.${env.REGION}.amazonaws.com/${env.CODEARTIFACT_PATH}</url>
+			<mirrorOf>*</mirrorOf>
+		</mirror>
+	</mirrors>
+	<activeProfiles>
+		<activeProfile>maven-aws-us</activeProfile>
+	</activeProfiles>
+</settings>

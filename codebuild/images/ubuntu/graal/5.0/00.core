@@ -1,0 +1,62 @@
+FROM public.ecr.aws/ubuntu/ubuntu:20.04 AS core
+
+ENV LC_CTYPE="C.UTF-8"
+
+RUN useradd codebuild-user
+
+ARG DEBIAN_FRONTEND="noninteractive"
+
+RUN set -ex \
+    # Install git, SSH, and other utilities
+    && echo 'Acquire::CompressionTypes::Order:: "gz";' > /etc/apt/apt.conf.d/99use-gzip-compression \
+    && apt-get update \
+    && apt install -y -qq apt-transport-https gnupg ca-certificates \
+    && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF \
+    && apt-get install software-properties-common -y -qq --no-install-recommends \
+    && apt-add-repository -y ppa:git-core/ppa \
+    && apt-get update \
+    && apt-get install git=1:2.* -y -qq --no-install-recommends \
+    && git version \
+    && apt-get install -y -qq --no-install-recommends openssh-client \
+    && mkdir ~/.ssh \
+    && mkdir -p /codebuild/image/config \
+    && touch ~/.ssh/known_hosts \
+    && ssh-keyscan -t rsa,dsa -H github.com >> ~/.ssh/known_hosts \
+    && ssh-keyscan -t rsa,dsa -H bitbucket.org >> ~/.ssh/known_hosts \
+    && chmod 600 ~/.ssh/known_hosts \
+    && apt-get install -y -qq --no-install-recommends \
+          apt-utils asciidoc autoconf automake build-essential bzip2 \
+          bzr curl dirmngr docbook-xml docbook-xsl dpkg-dev \
+          e2fsprogs expect fakeroot file g++ gcc gettext gettext-base \
+          groff gzip iptables jq less libapr1 libaprutil1 \
+          libargon2-0-dev libbz2-dev libc6-dev libcurl4-openssl-dev \
+          libdb-dev libdbd-sqlite3-perl libdbi-perl libdpkg-perl \
+          libedit-dev liberror-perl libevent-dev libffi-dev libgeoip-dev \
+          libglib2.0-dev libhttp-date-perl libio-pty-perl libjpeg-dev \
+          libkrb5-dev liblzma-dev libmagickcore-dev libmagickwand-dev \
+          libmysqlclient-dev libncurses5-dev libncursesw5-dev libonig-dev \
+          libpq-dev libreadline-dev libserf-1-1 libsodium-dev libsqlite3-dev libssl-dev \
+          libsvn1 libsvn-perl libtcl8.6 libtidy-dev libtimedate-perl \
+          libtool libwebp-dev libxml2-dev libxml2-utils libxslt1-dev \
+          libyaml-dev libyaml-perl llvm locales make mlocate \
+          netbase openssl patch pkg-config procps python3-configobj \
+          python-openssl rsync sgml-base sgml-data \
+          tar tcl tcl8.6 tk tk-dev unzip wget xfsprogs xml-core xmlto xsltproc \
+          libzip5 libzip-dev vim xvfb xz-utils zip zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    # cacerts and other stuff
+    && apt-get update \
+    && apt-get install -y -qq software-properties-common apt-utils \
+    && wget -qO- https://apt.corretto.aws/corretto.key | apt-key add - \
+    && add-apt-repository 'deb https://apt.corretto.aws stable main' \
+    && apt-get update \
+    && apt-get install -y -qq --no-install-recommends ca-certificates-java \
+    # Ensure Java cacerts symlink points to valid location
+    && update-ca-certificates -f \
+    && dpkg --add-architecture i386 \
+    && apt-get update \
+    && apt-get install -y -qq --force-yes libc6-i386 \
+       lib32stdc++6 lib32gcc1 lib32ncurses6 \
+       lib32z1 libqt5widgets5 \
+    && rm -rf /tmp/* /var/tmp/* \
+    && rm -rf /usr/lib/jvm/java-1* /usr/lib/jvm/default-java 

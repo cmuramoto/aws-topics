@@ -1,0 +1,9 @@
+FROM avalon.ecr.ubuntu/graal/quarkus:5.0
+
+WORKDIR "/quarkus"
+
+RUN git clone --branch 2.7.5.Final https://github.com/quarkusio/quarkus-quickstarts.git . \
+    && mvn package -DskipTests \
+    && rm -f "/quarkus/*" \
+    && rm -rf "/quarkus" && rm -rf /root/.gradle \
+    && cd /root/.m2 && find . -name _remote.repositories -exec rm -f {} \;

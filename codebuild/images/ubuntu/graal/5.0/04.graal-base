@@ -1,0 +1,37 @@
+FROM avalon.ecr.ubuntu/maven:5.0
+
+ENV JAVA_17_HOME="/usr/lib/jvm/graal-17"
+ENV JDK_17_HOME="/usr/lib/jvm/graal-17"
+ENV JRE_17_HOME="/usr/lib/jvm/graal-17"
+
+ENV JAVA_HOME="$JAVA_17_HOME" \
+    JDK_HOME="$JDK_17_HOME" \
+    JRE_HOME="$JRE_17_HOME" \
+    JDK_VERSION=17.0.2 \
+    JDK_VERSION_TAG=2022-01-18 \
+    JDK_DOWNLOAD_SHA256="4f743e0ed3d974b7d619ca2ed6014554e8c12e5ebbb38b9bc9e820b182169bd4" 
+
+ENV PATH="${PATH}:/opt/tools"
+ENV JDK_DOWNLOAD_TAR="graalvm-ce-java17-linux-amd64-22.0.0.2.tar.gz"
+ENV JDK_DOWNLOAD_TAR_URL="https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-22.0.0.2/graalvm-ce-java17-linux-amd64-22.0.0.2.tar.gz"
+
+RUN set -ex \
+    # Install GraalVM 17
+    # Note: We will use update-alternatives to make sure Graal17 has higher priority for all the tools
+    && mkdir -p $JAVA_HOME \
+    && curl -LSso /var/tmp/$JDK_DOWNLOAD_TAR $JDK_DOWNLOAD_TAR_URL \
+    && echo "$JDK_DOWNLOAD_SHA256 /var/tmp/$JDK_DOWNLOAD_TAR" | tee foo.txt | sha256sum -c - \
+    && tar xzvf /var/tmp/$JDK_DOWNLOAD_TAR -C $JAVA_HOME --strip-components=1 \
+    && $JAVA_HOME/lib/installer/bin/gu install native-image \
+    && for tool_path in $JAVA_HOME/bin/*; do \
+          tool=`basename $tool_path`; \
+          update-alternatives --install /usr/bin/$tool $tool $tool_path 10000; \
+          update-alternatives --set $tool $tool_path; \
+        done \
+    && rm $JAVA_HOME/lib/security/cacerts && ln -s /etc/ssl/certs/java/cacerts $JAVA_HOME/lib/security/cacerts \
+     # Cleanup
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    # selectivelly purge other languages & useless stuff
+    && rm -rf $JDK_17_HOME/languages/js &&  rm -rf $JDK_17_HOME/lib/visualvm && rm -rf $JDK_17_HOME/lib/src.zip \
+    && apt-get clean && rm -rf /usr/lib/jvm/java-1* /usr/lib/jvm/default-java \
+    && ln -s $JAVA_HOME default-java

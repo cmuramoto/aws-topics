@@ -1,0 +1,13 @@
+FROM avalon.ecr.ubuntu/graal/quarkus-extras:5.0
+
+WORKDIR "/quarkus"
+
+COPY "projects/EchoFunction" "/quarkus/EchoFunction"
+
+RUN mvn archetype:generate -DarchetypeGroupId=io.quarkus -DarchetypeArtifactId=quarkus-amazon-lambda-archetype -DarchetypeVersion=2.7.5.Final -DgroupId=com.nc -DartifactId=lambda-arch -Dversion=1.0.0 \
+    && cd lambda-arch && mvn -Pnative clean package && cd .. \
+    && cd EchoFunction && mvn -Pnative clean package && mvn failsafe:integration-test && cd .. \
+    && rm -rf "/quarkus" && rm -rf /root/.gradle \
+    && cd /root/.m2 && find . -name _remote.repositories -exec rm -f {} \;
+
+

@@ -1,0 +1,24 @@
+version: 0.1
+
+runtimes:
+  java:
+    versions:
+      graal17:
+        commands:
+          - echo "Installing Java Graal version 17 ..."
+
+          - export JAVA_HOME="$JAVA_17_HOME"
+
+          - export JRE_HOME="$JRE_17_HOME"
+
+          - export JDK_HOME="$JDK_17_HOME"
+
+          - |-
+            for tool_path in "$JAVA_17_HOME"/bin/* "$JRE_17_HOME"/bin/*;
+             do tool=`basename "$tool_path"`;
+              if [ $tool != 'java-rmi.cgi' ];
+              then
+              update-alternatives --list "$tool" | grep -q "$tool_path" \
+               && update-alternatives --set "$tool" "$tool_path";
+              fi;
+            done

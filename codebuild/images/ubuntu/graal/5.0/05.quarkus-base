@@ -1,0 +1,10 @@
+FROM avalon.ecr.ubuntu/graal/base:5.0
+
+WORKDIR "/quarkus"
+# ~2669 jars
+RUN git clone --branch 2.7.5.Final https://github.com/quarkusio/quarkus.git . \
+    && mvn -Pquick-build \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    && rm -rf "/quarkus" && rm -rf /root/.gradle \
+    && cd /root/.m2 && find . -name _remote.repositories -exec rm -f {} \;
+  

@@ -1,0 +1,19 @@
+---
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: graal17
+  build:
+    commands:
+      - export REGION=$AWS_REGION
+      - export CODEARTIFACT_PATH=maven/maven-central-store
+      - export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      - export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain maven --domain-owner $ACCOUNT_ID --query authorizationToken --output text)
+      - printenv
+      - mvn clean package -Pnative
+      - ls target
+artifacts:
+  files:
+    - target/function.zip
