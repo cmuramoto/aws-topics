@@ -1,0 +1,28 @@
+---
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: graal17
+  build:
+    commands:
+      - export REGION=$AWS_REGION
+      - export CODEARTIFACT_PATH=maven/maven-central-store
+      - export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      - export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain maven --domain-owner $ACCOUNT_ID --query authorizationToken --output text)
+      - aws ecr-public get-login-password --region $REGION | docker login --username AWS --password-stdin public.ecr.aws/p2a3e6m8
+      - printenv
+      - >
+        mvn package -Pnative -Dquarkus.container-image.build=true 
+        -Dquarkus.jib.base-native-image=quay.io/quarkus/quarkus-distroless-image:1.0 
+        -Dquarkus.container-image.name=hello-api 
+        -Dquarkus.container-image.tag=latest 
+        -Dquarkus.container-image.group=p2a3e6m8/apps 
+        -Dquarkus.container-image.registry=public.ecr.aws
+        -Dquarkus.container-image.push=true
+      - docker image ls
+      - ls target
+artifacts:
+  files:
+    - target/getting-started-1.0.0-SNAPSHOT-runner
